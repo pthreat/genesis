@@ -12,14 +12,14 @@ export LIB="lib"
 rm -f genesis
 rm -f src/*
 
+gcc -c vendor/htmlstreamparser/htmlstreamparser.c -o src/htmlstreamparser.o
+gcc -c vendor/libyuarel/yuarel.c -o src/yuarel.o
+
 for x in $files; do 
 	echo "Compiling $x ..."
 	export mod="${x}.o"
 	gcc -c "$LIB/$x" -o "$SOURCES/$mod"
 done
-
-gcc -c vendor/htmlstreamparser/htmlstreamparser.c -o src/htmlstreamparser.o
-gcc -c vendor/libyuarel/yuarel.c -o src/yuarel.o
 
 gcc src/*.o $(mysql_config --cflags --libs) -lcurl -lssl -lcrypto -o $EXECUTABLE
 

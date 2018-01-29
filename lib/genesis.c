@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <limits.h>
+#include <time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "../config.h"
 

@@ -5,7 +5,7 @@ char *generateRandomIp(int a, int b, int c, int d){
 
 	sprintf(
 			ip,
-			"%d.%d.%d.%d\0",
+			"%d.%d.%d.%d",
 			a == -1 ? rand() / (RAND_MAX / 255 + 1) : a,
 			b == -1 ? rand() / (RAND_MAX / 255 + 1) : b,
 			c == -1 ? rand() / (RAND_MAX / 255 + 1) : c,

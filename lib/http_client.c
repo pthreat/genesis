@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <curl/curl.h>
+#include <mysql/mysql.h>
+
+#include "../include/db.h"
 #include "../include/http_client.h"
 #include "../vendor/htmlstreamparser/htmlstreamparser.h"
 #include "../vendor/libyuarel/yuarel.h"
@@ -12,7 +15,7 @@ void addCrawlHost(char *host){
 	char *sql = malloc(1024); 
 	sprintf(sql, SQL_ADD_CRAWL_HOST, TBL_CRAWL_HOSTS, host);
 	printf("%s\n",sql);
-	mysql_query(dbConnection(), sql);
+	mysql_query(dbConnection(NULL), sql);
 }
 
 static size_t attr_callback(void *buffer, size_t size, size_t nmemb,void *hsp){

@@ -17,7 +17,14 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include "htmlstreamparser.h"
+
+/*
+ * Returns 1 if the char specified by the chr argument
+ * is the HTML whitespace otherwise returns 0.
+ */
+int ishtmlspace(char chr);
 
 HTMLSTREAMPARSER *html_parser_reset(HTMLSTREAMPARSER *hsp) {
 	memset(hsp->html_part, 0, HTML_PART_SIZE);
