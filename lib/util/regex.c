@@ -1,4 +1,5 @@
-#include "../include/regex.h"
+#include <stdio.h>
+#include "../../include/util/regex.h"
 
 unsigned short int preg_match(char* pattern, char *content){
 	regex_t re;

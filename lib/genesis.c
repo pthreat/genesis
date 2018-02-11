@@ -1,18 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
-#include <limits.h>
-#include <time.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "../config.h"
-
-#include "../include/db.h"
-#include "../include/constants.h"
-#include "../include/http_client.h"
-#include "../include/ipgen.h"
-#include "../include/regex.h"
+#include "../include/db/conn.h"
+#include "../include/util/list.h"
+#include "../include/util/uri.h"
+#include "../include/html/parser.h"
 
 int main(int argc, char *argv[]){
 
@@ -29,32 +23,39 @@ int main(int argc, char *argv[]){
 		exit(MYSQL_CONNECT_ERROR);
 	}
 
-	char *ip = NULL;
-	int a=-1,b=-1,c=-1,d=-1;
+	HTMLSTREAMPARSER *hsp;
+	hsp = html_init_tag_parser("a", "href", getUriMaxLen());
+
+	ipv4Addr addr;
+	initIpv4Addr(&addr);
+
+	List protocols;
+
+	list_new(&protocols, sizeof(char *), NULL);
+
+	list_append(&protocols, "http");
+	list_append(&protocols, "https");
 
 	//Initialize the random number seed
 	srand(mix(clock(), time(NULL), getpid()));
 
-	a = atoi(argv[1]) > -1 ? atoi(argv[1]) : a;
-	b = atoi(argv[2]) > -1 ? atoi(argv[2]) : b;
-	c = atoi(argv[3]) > -1 ? atoi(argv[3]) : c;
-	d = atoi(argv[4]) > -1 ? atoi(argv[4]) : d;
+	while(1){
+		List uriList;
+		list_new(&uriList, sizeof(Uri), NULL);
+		generateUriList(20, &protocols, &uriList, &addr);
+		printUriList(&uriList);
+		httpMulti(
+			&uriList, 
+			html_parse_tag_attr, 
+			hsp, 
+			GENESIS_USER_AGENT,
+			GENESIS_CONNECT_TIMEOUT, 
+			GENESIS_TRANSFER_TIMEOUT_MS
+		);
 
-	while(TRUE){
-		ip = generateRandomIp(a,b,c,d);
-		char *http = malloc(30);
-		char *https = malloc(30);
-
-		sprintf(http, "http://%s",ip);
-		sprintf(https, "https://%s",ip);
-
-		printf("Trying %s ...\n", http);
-		httpGet(http, "a", "href", HOST_NAME_MAX * 2);
-		printf("Trying %s ...\n", https);
-		httpGet(https, "a", "href", HOST_NAME_MAX * 2);
-		free(ip);
-		free(http);
-		free(https);
+		destroyUriList(&uriList);
 	}
+
+	list_destroy(&protocols);
 
 }

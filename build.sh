@@ -1,11 +1,10 @@
 #!/bin/bash
 
-export files=$(ls lib);
+export files=$(find ./lib -name "*.c");
 export EXECUTABLE="genesis"
 export SSL_FLAGS="-lssl -lcrypto"
 export MYSQL_FLAGS=$(mysql_config --cflags --libs);
 export SOURCES="src"
-export LIB="lib"
 
 [ ! -d $SOURCES ] && mkdir $SOURCES
 
@@ -17,11 +16,10 @@ gcc -c vendor/libyuarel/yuarel.c -o src/yuarel.o
 
 for x in $files; do 
 	echo "Compiling $x ..."
-	export mod="${x}.o"
-	gcc -c "$LIB/$x" -o "$SOURCES/$mod"
+	export mod=$(echo $x | sed s/"\/"/"_"/g | sed s/\.c/\.o/g | sed s/"\._"//g )
+	gcc -c $x -o "./src/$mod"
 done
 
 gcc src/*.o $(mysql_config --cflags --libs) -lcurl -lssl -lcrypto -o $EXECUTABLE
 
-[ $? -eq 0 ] && echo "Let the games ... BEGIN!"
-
+[ $? -eq 0 ] && echo "Build successful, you may want to run ./$EXECUTABLE now"

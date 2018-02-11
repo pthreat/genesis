@@ -1,7 +1,8 @@
 #include <stdio.h>
-#include "../include/db.h"
-#include "../include/constants.h"
-
+#include "../../include/db/conn.h"
+/**
+ * Returns a connection to the database (singleton pattern)
+ */
 MYSQL* dbConnection(struct DBParams *params){
 	static MYSQL* con = NULL;
 
