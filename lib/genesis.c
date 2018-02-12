@@ -29,12 +29,19 @@ int main(int argc, char *argv[]){
 	ipv4Addr addr;
 	initIpv4Addr(&addr);
 
+	if((argc - 1) == 4){
+		addr.a = atoi(argv[1]);
+		addr.b = atoi(argv[2]);
+		addr.c = atoi(argv[3]);
+		addr.d = atoi(argv[4]);
+	}
+
 	List protocols;
 
 	list_new(&protocols, sizeof(char *), NULL);
 
 	list_append(&protocols, "http");
-	list_append(&protocols, "https");
+	//list_append(&protocols, "https");
 
 	//Initialize the random number seed
 	srand(mix(clock(), time(NULL), getpid()));
@@ -42,8 +49,16 @@ int main(int argc, char *argv[]){
 	while(1){
 		List uriList;
 		list_new(&uriList, sizeof(Uri), NULL);
-		generateUriList(20, &protocols, &uriList, &addr);
+
+		generateUriList(
+			GENESIS_MAX_IP_GENERATION,
+			&protocols,
+			&uriList,
+			&addr
+		);
+
 		printUriList(&uriList);
+
 		httpMulti(
 			&uriList, 
 			html_parse_tag_attr, 
@@ -54,6 +69,10 @@ int main(int argc, char *argv[]){
 		);
 
 		destroyUriList(&uriList);
+
+		if(GENESIS_SLEEP_BETWEEN_BATCHES > 0){
+			sleep(GENESIS_SLEEP_BETWEEN_BATCHES);
+		}
 	}
 
 	list_destroy(&protocols);

@@ -24,12 +24,12 @@ HTMLSTREAMPARSER* html_init_tag_parser(char *tagName, char *tagAttribute, unsign
 /**
  * Parses an attribute from an HTML tag
  */
-size_t html_parse_tag_attr(void *buffer, size_t size, size_t nmemb,void *hsp){
-
+size_t html_parse_tag_attr(void *buffer, size_t size, size_t nmemb, void *hsp){
 	size_t realsize = size * nmemb, p;
+	char *parsed;
+	struct yuarel url;
 
 	for(p = 0; p < realsize; p++) {
-		struct yuarel url;
 		html_parser_char_parse(hsp, ((char *)buffer)[p]);
 
 		if(
@@ -38,7 +38,7 @@ size_t html_parse_tag_attr(void *buffer, size_t size, size_t nmemb,void *hsp){
 				html_parser_is_in(hsp, HTML_VALUE_ENDED)
 		  )
 		{
-			char* parsed = malloc(2048);
+			parsed = malloc(2048);
 			html_parser_val(hsp)[html_parser_val_length(hsp)] = '\0';
 
 			sprintf(parsed,"%s",html_parser_val(hsp));

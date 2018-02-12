@@ -3,6 +3,7 @@
 void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *ua, int connectTimeout, int transferTimeout) {
 
 	CURL *handles[uriList->length];
+	HTMLSTREAMPARSER *writeBuffers[uriList->length];
 	CURLM *multi_handle;
 	CURLMsg *msg; /* for picking up messages with the transfer status */ 
 
@@ -11,10 +12,10 @@ void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *
 
 	int msgs_left; /* how many messages are left */ 
 
-	listNode *uri = uriList->head;
-
 	/* init a multi stack */ 
 	multi_handle = curl_multi_init();
+
+	listNode *uri = uriList->head;
 
 	/* Allocate one CURL handle per transfer */ 
 	while(uri != NULL){
@@ -27,6 +28,9 @@ void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *
 			connectTimeout, 
 			transferTimeout
 		);
+
+		writeBuffers[i] = html_init_tag_parser("a", "href", getUriMaxLen());
+		curl_easy_setopt(handles[i], CURLOPT_WRITEDATA, writeBuffers[i]);
 
 		curl_multi_add_handle(multi_handle, handles[i]);
 		uri = uri->next;
@@ -122,6 +126,7 @@ void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *
 	/* Free the CURL handles */ 
 	for(i = 0; i < uriList->length; i++){
 
+		free(writeBuffers[i]);
 		curl_easy_cleanup(handles[i]);
 
 	}
@@ -157,10 +162,6 @@ CURL* curlInitHandle(Uri *uri, curl_callback callback, void *writeBuffer, char *
 
 	if(callback != NULL){
 		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, callback);
-	}
-
-	if(writeBuffer != NULL){
-		curl_easy_setopt(handle, CURLOPT_WRITEDATA, writeBuffer);
 	}
 
 	return handle;

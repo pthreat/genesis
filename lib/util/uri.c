@@ -1,29 +1,18 @@
 #include "../../include/util/uri.h"
 
 unsigned int initUri(Uri *uri, char *proto, char *host, unsigned short int port, char *path){
-	unsigned int protoLen = strnlen(proto, URI_MAX_PROTO_LENGTH) + 1;
-	unsigned int hostLen = strnlen(host, URI_MAX_HOST_LENGTH) + 1;
-	unsigned int pathLen = 0;
+	unsigned int protoLen = strnlen(proto, URI_MAX_PROTO_LENGTH);
+	unsigned int hostLen = strnlen(host, URI_MAX_HOST_LENGTH);
+	unsigned int pathLen = strnlen(path, URI_MAX_PATH_LENGTH);
 
-	uri->proto = NULL;
-	uri->host = NULL;
+	uri->proto = malloc(protoLen + 1);
+	uri->host = malloc(hostLen + 1);
 	uri->port = port > 0 ? port : 0;
-	uri->path = NULL;
+	uri->path = malloc(pathLen + 1);
 
-	uri->proto = malloc(protoLen);
-	strncpy(uri->proto, proto, protoLen);
-	uri->host = malloc(strnlen(host, hostLen));
-	strncpy(uri->host, host, hostLen);
-
-	if(path != NULL){
-		pathLen = strnlen(path, URI_MAX_PATH_LENGTH);
-		uri->path = malloc(URI_MAX_PATH_LENGTH);
-		strncpy(uri->path, path, pathLen);
-	}
-
-	if(port > 0){
-		uri->port = port;
-	}
+	strncpy(uri->proto, proto, protoLen + 1);
+	strncpy(uri->host, host, hostLen + 1);
+	strncpy(uri->path, path, pathLen + 1);
 
 	return 0;
 }
@@ -34,6 +23,7 @@ unsigned int generateUriList(unsigned long int amount, List *protocols, List *ur
 	ipv4Addr ip;
 	listNode *proto;
 	char *strIp; //You sexy bitch!
+	char *defaultPath = "/";
 
 	for(i=0; i < amount; i++){
 
@@ -52,7 +42,7 @@ unsigned int generateUriList(unsigned long int amount, List *protocols, List *ur
 
 		while(proto != NULL){
 			Uri u;
-			initUri(&u, (char *)proto->data, strIp, 0 , NULL);
+			initUri(&u, (char *)proto->data, strIp, 0 , defaultPath);
 			list_append(uriList, &u);
 			proto = proto->next;
 		}
@@ -96,9 +86,7 @@ void printUriList(List *uriList){
 void destroyUri(Uri *uri){
 	free(uri->proto);
 	free(uri->host);
-	if(uri->path != NULL){
-		free(uri->path);
-	}
+	free(uri->path);
 }
 
 void destroyUriList(List *uriList){
