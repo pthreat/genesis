@@ -28,9 +28,11 @@ size_t html_parse_tag_attr(void *buffer, size_t size, size_t nmemb, void *hsp){
 	size_t realsize = size * nmemb, p;
 	char *parsed;
 	struct yuarel url;
+	char c;
 
 	for(p = 0; p < realsize; p++) {
-		html_parser_char_parse(hsp, ((char *)buffer)[p]);
+		c = ((char *)buffer)[p];
+		html_parser_char_parse(hsp, c);
 
 		if(
 				html_parser_cmp_tag(hsp, "a", 1)     && 
