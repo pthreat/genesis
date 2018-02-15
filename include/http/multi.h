@@ -7,5 +7,5 @@
 #include "../util/uri.h"
 #include "../../config.h"
 
-void httpMulti(List *uriList, curl_callback callback, void *write_buffer , char *ua, int connectTimeout, int transferTimeout);
-CURL* curlInitHandle(Uri *uri, curl_callback callback, void *writeBuffer, char *ua, int connectTimeout, int transferTimeout);
+void httpMulti(List *uriList, char *ua, int connectTimeout, int transferTimeout);
+CURL* curlInitHandle(Uri *uri, char *ua, int connectTimeout, int transferTimeout);

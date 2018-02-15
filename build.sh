@@ -11,7 +11,6 @@ export SOURCES="src"
 rm -f genesis
 rm -f src/*
 
-gcc -c vendor/htmlstreamparser/htmlstreamparser.c -o src/htmlstreamparser.o
 gcc -c vendor/libyuarel/yuarel.c -o src/yuarel.o
 
 for x in $files; do 
@@ -20,6 +19,6 @@ for x in $files; do
 	gcc -c $x -o "./src/$mod"
 done
 
-gcc src/*.o $(mysql_config --cflags --libs) -lcurl -lssl -lcrypto -o $EXECUTABLE
+gcc src/*.o $(mysql_config --cflags --libs) -lcurl -lssl -lcrypto $(pkg-config --cflags --libs gumbo) -o $EXECUTABLE
 
 [ $? -eq 0 ] && echo "Build successful, you may want to run ./$EXECUTABLE now"

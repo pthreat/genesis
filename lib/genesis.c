@@ -23,9 +23,6 @@ int main(int argc, char *argv[]){
 		exit(MYSQL_CONNECT_ERROR);
 	}
 
-	HTMLSTREAMPARSER *hsp;
-	hsp = html_init_tag_parser("a", "href", getUriMaxLen());
-
 	ipv4Addr addr;
 	initIpv4Addr(&addr);
 
@@ -61,8 +58,6 @@ int main(int argc, char *argv[]){
 
 		httpMulti(
 			&uriList, 
-			html_parse_tag_attr, 
-			hsp, 
 			GENESIS_USER_AGENT,
 			GENESIS_CONNECT_TIMEOUT, 
 			GENESIS_TRANSFER_TIMEOUT_MS

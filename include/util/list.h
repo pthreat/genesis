@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "../types.h"
+#include <stdbool.h>
 
 #define LIST_MALLOC_ERROR 1
 #define LIST_OK 0

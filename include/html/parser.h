@@ -1,7 +1,15 @@
 #include <stdio.h>
-#include "../../vendor/htmlstreamparser/htmlstreamparser.h"
+#include <stdlib.h>
+#include <string.h>
 #include "../../vendor/libyuarel/yuarel.h"
 #include "../../include/sql/queries.h"
+#include "../../include/util/regex.h"
+#include <gumbo.h>
 
-HTMLSTREAMPARSER* html_init_tag_parser(char *tagName, char *tagAttribute, unsigned int maxTagValueLength);
-size_t html_parse_tag_attr(void *buffer, size_t size, size_t nmemb,void *hsp);
+typedef struct MemoryStruct {
+	char *memory;
+	size_t size;
+} MemoryStruct;
+
+size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp);
+int parseHrefs(MemoryStruct *memory);

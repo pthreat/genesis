@@ -1,9 +1,9 @@
 #include "../../include/http/multi.h"
 
-void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *ua, int connectTimeout, int transferTimeout) {
+void httpMulti(List *uriList, char *ua, int connectTimeout, int transferTimeout) {
 
 	CURL *handles[uriList->length];
-	HTMLSTREAMPARSER *writeBuffers[uriList->length];
+	MemoryStruct memBuffers[uriList->length];
 	CURLM *multi_handle;
 	CURLMsg *msg; /* for picking up messages with the transfer status */ 
 
@@ -20,17 +20,18 @@ void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *
 	/* Allocate one CURL handle per transfer */ 
 	while(uri != NULL){
 
+		memBuffers[i].memory = malloc(1);
+		memBuffers[i].size = 0;
+
 		handles[i] = curlInitHandle(
 			(Uri *)uri->data, 
-			callback, 
-			write_buffer, 
 			ua, 
 			connectTimeout, 
 			transferTimeout
 		);
 
-		writeBuffers[i] = html_init_tag_parser("a", "href", getUriMaxLen());
-		curl_easy_setopt(handles[i], CURLOPT_WRITEDATA, writeBuffers[i]);
+		curl_easy_setopt(handles[i], CURLOPT_WRITEDATA, (void *)&memBuffers[i]);
+		curl_easy_setopt(handles[i], CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 
 		curl_multi_add_handle(multi_handle, handles[i]);
 		uri = uri->next;
@@ -125,15 +126,14 @@ void httpMulti(List *uriList, curl_callback callback, void *write_buffer, char *
 
 	/* Free the CURL handles */ 
 	for(i = 0; i < uriList->length; i++){
-
-		free(writeBuffers[i]);
+		parseHrefs(&memBuffers[i]);
+		free(memBuffers[i].memory);
 		curl_easy_cleanup(handles[i]);
-
 	}
 
 }
 
-CURL* curlInitHandle(Uri *uri, curl_callback callback, void *writeBuffer, char *ua, int connectTimeout, int transferTimeout){
+CURL* curlInitHandle(Uri *uri, char *ua, int connectTimeout, int transferTimeout){
 	CURL *handle;
 	handle = curl_easy_init();
 	char *strUri = uriToString(uri);
@@ -159,10 +159,6 @@ CURL* curlInitHandle(Uri *uri, curl_callback callback, void *writeBuffer, char *
 	}
 
 	curl_easy_setopt(handle, CURLOPT_USERAGENT, GENESIS_USER_AGENT);
-
-	if(callback != NULL){
-		curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, callback);
-	}
 
 	return handle;
 }

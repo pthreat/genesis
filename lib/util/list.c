@@ -89,7 +89,9 @@ void list_foreach(List *list, listIterator iterator)
 	assert(iterator != NULL);
 
 	listNode *node = list->head;
-	bool result = TRUE;
+
+	bool result = true;
+
 	while(node != NULL && result) {
 		result = iterator(node->data);
 		node = node->next;

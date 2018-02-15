@@ -1,63 +1,66 @@
 #include "../../include/html/parser.h"
 
-/**
- * Returns a properly initialized HTMLSTREAMPARSER pointer
- */
-HTMLSTREAMPARSER* html_init_tag_parser(char *tagName, char *tagAttribute, unsigned int maxTagValueLength){
-	HTMLSTREAMPARSER *hsp;
+#define PARSER_HREF_REGEX "href=[\"\']?([^\"\'>]+)[\"\']?"
 
-	char val[maxTagValueLength];
-	char tag[strlen(tagName)];
-	char attr[strlen(tagAttribute)];
+size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+	size_t realsize = size * nmemb;
+	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
 
-	hsp = html_parser_init();
+	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
+	if(mem->memory == NULL) {
+		/* out of memory! */
+		printf("not enough memory (realloc returned NULL)\n");
+		return 0;
+	}
 
-	html_parser_set_tag_to_lower(hsp, 1);
-	html_parser_set_attr_to_lower(hsp, 1);
-	html_parser_set_tag_buffer(hsp, tag, sizeof(tag));
-	html_parser_set_attr_buffer(hsp, attr, sizeof(attr));
-	html_parser_set_val_buffer(hsp, val, maxTagValueLength);
+	strncpy(&(mem->memory[mem->size]), contents, realsize);
+	mem->size += realsize;
+	mem->memory[mem->size] = '\0';
 
-	return hsp;
+	return realsize;
 }
 
-/**
- * Parses an attribute from an HTML tag
- */
-size_t html_parse_tag_attr(void *buffer, size_t size, size_t nmemb, void *hsp){
-	size_t realsize = size * nmemb, p;
-	char *parsed;
+void searchLinks(GumboNode *node){
+
+	if (node->type != GUMBO_NODE_ELEMENT) {
+		return;
+	}
+
+	unsigned int i = 0;
+	GumboAttribute* href;
 	struct yuarel url;
-	char c;
+	char *parsed = malloc(2048);
 
-	for(p = 0; p < realsize; p++) {
-		c = ((char *)buffer)[p];
-		html_parser_char_parse(hsp, c);
+	if (node->v.element.tag == GUMBO_TAG_A &&
+		(href = gumbo_get_attribute(&node->v.element.attributes, "href"))
+	) {
 
-		if(
-				html_parser_cmp_tag(hsp, "a", 1)     && 
-				html_parser_cmp_attr(hsp, "href", 4) &&
-				html_parser_is_in(hsp, HTML_VALUE_ENDED)
-		  )
-		{
-			parsed = malloc(2048);
-			html_parser_val(hsp)[html_parser_val_length(hsp)] = '\0';
+		sprintf(parsed, "%s", href->value);
 
-			sprintf(parsed,"%s",html_parser_val(hsp));
+		if(-1 == yuarel_parse(&url, parsed)){
+			puts("Could not parse href");
+		}
 
-			if(-1 == yuarel_parse(&url, parsed)){
-				puts("Could not parse URL");
-				continue;
-			}
-
-			if(url.host != NULL){
-				addCrawlHost(url.host);
-			}
-
-			free(parsed);
+		if(url.host!= NULL){
+			addCrawlHost(url.host);
 		}
 	}
 
-	return realsize;
+	free(parsed);
 
+	GumboVector* children = &node->v.element.children;
+	
+	for (i = 0; i < children->length; ++i) {
+		searchLinks((GumboNode*)children->data[i]);
+	}
+
+}
+
+int parseHrefs(MemoryStruct *mem){
+
+	printf("%s",mem->memory);
+	GumboOutput *out = gumbo_parse(mem->memory);
+	searchLinks(out->root);
+	gumbo_destroy_output(&kGumboDefaultOptions, out);
 }
