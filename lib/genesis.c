@@ -1,12 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "../include/genesis.h"
 
-#include "../config.h"
-#include "../include/db/conn.h"
-#include "../include/util/list.h"
-#include "../include/util/uri.h"
-#include "../include/html/parser.h"
+int handleRecord(MYSQL_ROW row, unsigned int numFields, void *userData){
+
+	CrawlRecord r;
+	initCrawlRecord(row, &r);
+
+	Uri u;
+	initUri(&u, r.scheme, r.url, 0, "/");
+	list_append((List *)userData, &u);
+
+	destroyCrawlRecord(&r);
+
+}
 
 int main(int argc, char *argv[]){
 
@@ -18,10 +23,7 @@ int main(int argc, char *argv[]){
 	conParams.name = DB_NAME;
 	conParams.port = DB_PORT;
 
-	if(dbConnection(&conParams) == NULL){
-		fprintf(stderr, "Could not connect to database %s", conParams.name);
-		exit(MYSQL_CONNECT_ERROR);
-	}
+	dbConnection(&conParams);
 
 	ipv4Addr addr;
 	initIpv4Addr(&addr);
@@ -36,25 +38,38 @@ int main(int argc, char *argv[]){
 	List protocols;
 
 	list_new(&protocols, sizeof(char *), NULL);
-
 	list_append(&protocols, "http");
+
 	//list_append(&protocols, "https");
 
 	//Initialize the random number seed
 	srand(mix(clock(), time(NULL), getpid()));
 
+	unsigned int mode;
+
 	while(1){
 		List uriList;
 		list_new(&uriList, sizeof(Uri), NULL);
+		mode = 0;
 
-		generateUriList(
-			GENESIS_MAX_IP_GENERATION,
-			&protocols,
-			&uriList,
-			&addr
-		);
+		getNonInspectedHosts(handleRecord, GENESIS_MAX_IP_GENERATION, &uriList);
+
+		if(uriList.length == 0){
+			mode = 1;
+			generateUriList(
+				GENESIS_MAX_IP_GENERATION,
+				&protocols,
+				&uriList,
+				&addr
+			);
+
+		}
 
 		printUriList(&uriList);
+
+		if(mode == 0){
+			setUriListAsInspected(&uriList);
+		}
 
 		httpMulti(
 			&uriList, 
@@ -72,4 +87,8 @@ int main(int argc, char *argv[]){
 
 	list_destroy(&protocols);
 
+}
+
+const char* getPoolerName(){
+	return GENESIS_POOLER_NAME;
 }

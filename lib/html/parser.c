@@ -28,26 +28,58 @@ void searchLinks(GumboNode *node){
 	}
 
 	unsigned int i = 0;
+	unsigned int hrefLen = 0;
 	GumboAttribute* href;
 	struct yuarel url;
-	char *parsed = malloc(2048);
+	char parsed[2048];
+	char src[2048];
+
+	for(i=0; i < 2048; i++){
+		parsed[i] = '\0';
+		src[i] = '\0';
+	}
 
 	if (node->v.element.tag == GUMBO_TAG_A &&
 		(href = gumbo_get_attribute(&node->v.element.attributes, "href"))
 	) {
 
-		sprintf(parsed, "%s", href->value);
+		hrefLen = strnlen(href->value, 2048);
+		strncpy(parsed, href->value, hrefLen);
 
 		if(-1 == yuarel_parse(&url, parsed)){
 			puts("Could not parse href");
+			return;
 		}
 
-		if(url.host!= NULL){
-			addCrawlHost(url.host);
+		if(url.host!= NULL && urlExists(&url) == 0){
+			addCrawlHost(&url, GENESIS_POOLER_NAME);
 		}
+
 	}
 
-	free(parsed);
+	if (
+		(
+			node->v.element.tag == GUMBO_TAG_IMG || 
+			node->v.element.tag == GUMBO_TAG_SCRIPT ||
+			node->v.element.tag == GUMBO_TAG_EMBED ||
+			node->v.element.tag == GUMBO_TAG_IFRAME
+		) && 
+		(href = gumbo_get_attribute(&node->v.element.attributes, "src"))
+	) {
+
+		hrefLen = strnlen(href->value, 2048);
+		strncpy(src, href->value, hrefLen);
+
+		if(-1 == yuarel_parse(&url, src)){
+			puts("Could not parse href (other tags)");
+			return;
+		}
+
+		if(url.host!= NULL && urlExists(&url) == 0){
+			addCrawlHost(&url, GENESIS_POOLER_NAME);
+		}
+
+	}
 
 	GumboVector* children = &node->v.element.children;
 	
@@ -58,8 +90,6 @@ void searchLinks(GumboNode *node){
 }
 
 int parseHrefs(MemoryStruct *mem){
-
-	printf("%s",mem->memory);
 	GumboOutput *out = gumbo_parse(mem->memory);
 	searchLinks(out->root);
 	gumbo_destroy_output(&kGumboDefaultOptions, out);

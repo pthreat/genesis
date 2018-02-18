@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../../config.h"
 #include "../../vendor/libyuarel/yuarel.h"
 #include "../../include/sql/queries.h"
 #include "../../include/util/regex.h"

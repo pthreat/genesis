@@ -1,16 +1,16 @@
 #include "../../include/util/uri.h"
 
-unsigned int initUri(Uri *uri, char *proto, char *host, unsigned short int port, char *path){
-	unsigned int protoLen = strnlen(proto, URI_MAX_PROTO_LENGTH);
+unsigned int initUri(Uri *uri, char *scheme, char *host, unsigned short int port, char *path){
+	unsigned int schemeLen = strnlen(scheme, URI_MAX_SCHEME_LENGTH);
 	unsigned int hostLen = strnlen(host, URI_MAX_HOST_LENGTH);
 	unsigned int pathLen = strnlen(path, URI_MAX_PATH_LENGTH);
 
-	uri->proto = malloc(protoLen + 1);
+	uri->scheme = malloc(schemeLen + 1);
 	uri->host = malloc(hostLen + 1);
 	uri->port = port > 0 ? port : 0;
 	uri->path = malloc(pathLen + 1);
 
-	strncpy(uri->proto, proto, protoLen + 1);
+	strncpy(uri->scheme, scheme, schemeLen + 1);
 	strncpy(uri->host, host, hostLen + 1);
 	strncpy(uri->path, path, pathLen + 1);
 
@@ -57,14 +57,14 @@ char *uriToString(Uri *uri){
 	char *str;
 	unsigned int allocLen = 0;
 	
-	allocLen += strnlen(uri->proto, URI_MAX_PROTO_LENGTH) + 1;
-	allocLen += strlen(URI_PROTO_SEPARATOR) + 1;
+	allocLen += strnlen(uri->scheme, URI_MAX_SCHEME_LENGTH) + 1;
+	allocLen += strlen(URI_SCHEME_SEPARATOR) + 1;
 	allocLen += strnlen(uri->host, URI_MAX_HOST_LENGTH) + 1;
 	allocLen += uri->path == NULL ? 0 : strnlen(uri->path, URI_MAX_PATH_LENGTH) + 1;
 
 	str = malloc(allocLen);
 
-	sprintf(str, "%s%s%s%s", uri->proto, URI_PROTO_SEPARATOR, uri->host, (uri->path == NULL ? "" : uri->path));
+	sprintf(str, "%s%s%s%s", uri->scheme, URI_SCHEME_SEPARATOR, uri->host, (uri->path == NULL ? "" : uri->path));
 
 	return str;
 }
@@ -84,7 +84,7 @@ void printUriList(List *uriList){
 }
 
 void destroyUri(Uri *uri){
-	free(uri->proto);
+	free(uri->scheme);
 	free(uri->host);
 	free(uri->path);
 }
@@ -98,11 +98,11 @@ void destroyUriList(List *uriList){
 }
 
 unsigned int getUriMaxLen(){
-	return URI_MAX_PROTO_LENGTH + strlen(URI_PROTO_SEPARATOR) + URI_MAX_HOST_LENGTH + URI_MAX_PATH_LENGTH;
+	return URI_MAX_SCHEME_LENGTH + strlen(URI_SCHEME_SEPARATOR) + URI_MAX_HOST_LENGTH + URI_MAX_PATH_LENGTH;
 }
 
 void dumpUri(Uri *uri){
-	printf("\nProto: %s\n", uri->proto);
+	printf("\nProto: %s\n", uri->scheme);
 	printf("Host : %s\n", uri->host);
 	printf("Port : %d\n", uri->port);
 	printf("Path : %s\n", uri->path);

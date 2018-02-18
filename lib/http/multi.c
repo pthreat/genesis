@@ -142,7 +142,7 @@ CURL* curlInitHandle(Uri *uri, char *ua, int connectTimeout, int transferTimeout
 
 	curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
 
-	if(strcmp(uri->proto,"https")==0){
+	if(strcmp(uri->scheme,"https")==0){
 		curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);
 		curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0L);
 		curl_easy_setopt(handle, CURLOPT_PORT, 443);
