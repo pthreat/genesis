@@ -81,6 +81,39 @@ unsigned int getNonInspectedHosts(handleSQLRecord callback, unsigned int limit, 
 	return 0;
 }
 
+unsigned int getHostsThatNeedAddressResolution(handleSQLRecord callback, unsigned int limit, void *data){
+	char *sql = malloc(2048);
+
+	sprintf(
+		sql, 
+		SQL_GET_NON_RESOLVED_HOSTS,
+		limit
+	);
+
+	sqlSelect(sql, callback, data);
+
+	free(sql);
+
+	return 0;
+}
+
+void addRslvrRecord(char *id, char *ip){
+	char *sql = malloc(2048);
+
+	sprintf(
+		sql,
+		SQL_ADD_RSLVR_RECORD,
+		id,
+		ip
+	);
+
+	printf("%s\n", sql);
+
+	mysql_query(dbConnection(NULL), sql);
+
+	free(sql);
+}
+
 int initCrawlRecord(MYSQL_ROW row, CrawlRecord *record){
 	unsigned int idLen = strnlen((char *)row[0], 30);
 	unsigned int serverLen = strnlen((char *)row[1], 30);
@@ -108,6 +141,25 @@ int initCrawlRecord(MYSQL_ROW row, CrawlRecord *record){
 	sprintf(record->url, "%s", row[5]);
 }
 
+int handleCrawlRecord(MYSQL_ROW row, unsigned int numFields, void *userData){
+	CrawlRecord r;
+	initCrawlRecord(row, &r);
+	list_append((List *)userData, &r);
+}
+
+int crawlRecordToUri(MYSQL_ROW row, unsigned int numFields, void *userData){
+
+	CrawlRecord r;
+	initCrawlRecord(row, &r);
+
+	Uri u;
+	initUri(&u, r.scheme, r.url, 0, "/");
+	list_append((List *)userData, &u);
+
+	destroyCrawlRecord(&r);
+
+}
+
 void destroyCrawlRecord(CrawlRecord *record){
 	free(record->id);
 	free(record->server);
@@ -116,6 +168,34 @@ void destroyCrawlRecord(CrawlRecord *record){
 	free(record->scheme);
 	free(record->url);
 }
+
+int initRslvrRecord(MYSQL_ROW row, RslvrRecord *record){
+	unsigned int crawlPoolLen = strnlen((char *)row[0], 20);
+	unsigned int addrLen = strnlen((char *)row[1],48);
+
+	record->crawl_pool = malloc(crawlPoolLen+1);
+	sprintf(record->crawl_pool, "%s", row[0]);
+
+	record->addr = malloc(addrLen+1);
+	sprintf(record->addr, "%s", row[1]);
+
+	return 0;
+}
+
+int handleRslvrRecord(MYSQL_ROW row, unsigned int numFields, void *userData){
+	RslvrRecord r;
+	initRslvrRecord(row, &r);
+
+	list_append((List *)userData, &r);
+
+	destroyRslvrRecord(&r);
+}
+
+void destroyRslvrRecord(RslvrRecord *record){
+	free(record->crawl_pool);
+	free(record->addr);
+}
+
 
 int sqlSelect(char *sql, handleSQLRecord callback, void *data){
 
@@ -134,7 +214,7 @@ int sqlSelect(char *sql, handleSQLRecord callback, void *data){
 	MYSQL_ROW row;
 
 	while( (row = mysql_fetch_row(res)) ){
-		handleRecord(row, numFields, data);
+		callback(row, numFields, data);
 	}
 
 	mysql_free_result(res);

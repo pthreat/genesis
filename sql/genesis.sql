@@ -10,3 +10,11 @@ CREATE TABLE `crawl_pool` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_scheme_url` (`scheme`,`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `rslvr`;
+
+CREATE TABLE `rslvr` (
+	`crawl_pool` int(10) unsigned NOT NULL,
+	`addr` varchar(45) NOT NULL,
+	UNIQUE KEY `idx_crawl_pool_addr` (`crawl_pool`,`addr`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

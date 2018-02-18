@@ -1,18 +1,5 @@
 #include "../include/genesis.h"
 
-int handleRecord(MYSQL_ROW row, unsigned int numFields, void *userData){
-
-	CrawlRecord r;
-	initCrawlRecord(row, &r);
-
-	Uri u;
-	initUri(&u, r.scheme, r.url, 0, "/");
-	list_append((List *)userData, &u);
-
-	destroyCrawlRecord(&r);
-
-}
-
 int main(int argc, char *argv[]){
 
 	struct DBParams conParams;
@@ -52,7 +39,7 @@ int main(int argc, char *argv[]){
 		list_new(&uriList, sizeof(Uri), NULL);
 		mode = 0;
 
-		getNonInspectedHosts(handleRecord, GENESIS_MAX_IP_GENERATION, &uriList);
+		getNonInspectedHosts(crawlRecordToUri, GENESIS_MAX_IP_GENERATION, &uriList);
 
 		if(uriList.length == 0){
 			mode = 1;

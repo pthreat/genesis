@@ -1,4 +1,5 @@
 #ifndef __GENESIS_H
+#define __GENESIS_H
 
 #include <stdio.h>
 #include <stdlib.h>
